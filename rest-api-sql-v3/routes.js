@@ -19,8 +19,10 @@ router.post('/users', asyncHandler(async (req, res) => {
     try {
         if (req.body.firstName && req.body.lastName && req.body.emailAddress && req.body.password) {  
             await User.create(req.body);
-            res.status(201).setHeader("location", "/").end();
-        } 
+            res.status(201).setHeader("location", "/").json();
+        } else {
+            res.status(400).json({message: "The following data is required: FirstName, LastName, Email, and Password"});
+        }
     } catch (error) {
         if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
           const errors = error.errors.map(err => err.message);
