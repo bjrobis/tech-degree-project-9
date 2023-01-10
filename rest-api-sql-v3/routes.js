@@ -19,7 +19,7 @@ router.post('/users', asyncHandler(async (req, res) => {
     try {
         if (req.body.firstName && req.body.lastName && req.body.emailAddress && req.body.password) {  
             await User.create(req.body);
-            res.status(201).setHeader("location", "/");
+            res.status(201).setHeader("location", "/").end();
         } 
     } catch (error) {
         if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
@@ -49,7 +49,7 @@ router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
     if (req.body.title && req.body.description) {
         const newCourse = await Course.findOne({where: {title: req.body.title}});
         const id = newCourse.id;
-        res.status(201).setHeader("location", `/courses/${id}`);
+        res.status(201).setHeader("location", `/courses/${id}`).end();
     } else {
         res.status(400).json({message: error.message});
     }
@@ -57,42 +57,27 @@ router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
 
 //PUT: updates course
 router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
-    const course = await Course.findByPk(req.params.id);
-    if (course && req.body.title && req.body.description) {
-        if (req.body.title) {
-            course.title = req.body.title;
-        }
-        if (req.body.description) {
-            course.description  = req.body.description;
-        }
-        if (req.body.id) {
-            course.id  = req.body.id;
-        }
-        if (req.body.estimatedTime) {
-            course.estimatedTime  = req.body.estimatedTime;
-        }
-        if (req.body.materialsNeeded) {
-            course.description  = req.body.description;
-        }
-        if (req.body.userID) {
-            course.userID  = req.body.userID;
-        }
-         
-        await save(course);
-        //204 indicates that the update went as expected 
-        //end method tells express that we are done (need to end if you aren't sending data back)
-        res.status(204).end();
+    let course = await Course.findByPk(req.params.id);
+    const currentUserId = req.currentUser.id;
+    if (currentUserId === course.userId) {
+        await course.update(req.body);
+        res.status(204).json();
     } else {
-        res.status(400).json({message: error.message});
+        res.status(403).json({message: 'Denied: You do not own this course'});
     }
   }));
 
 //DELETE: deletes the corresponding course
 router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
-    const courses =  await Course.findAll();
-    courses = courses.filter(item => item.id != req.params.id);
-    await save(courses);
-    res.status(204).end();
+    let course = await Course.findByPk(req.params.id);
+    const currentUserId = req.currentUser.id;
+    if (currentUserId === course.userId) {
+        await course.destroy();
+        res.status(204).json();
+    } else {
+        res.status(403).json({message: 'Denied: You do not own this course'});
+    }
+
 }));
 
 
