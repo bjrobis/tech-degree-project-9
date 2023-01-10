@@ -3,6 +3,7 @@
 // load modules
 const express = require('express');
 const morgan = require('morgan');
+const routes = require('./routes');
 
 const {sequelize} = require('./models'); // import Sequelize
 
@@ -14,6 +15,9 @@ const app = express();
 
 // setup morgan which gives us http request logging
 app.use(morgan('dev'));
+
+// Add routes.
+app.use('/api', routes);
 
 // Test the database connection.
 (async () => {
@@ -52,7 +56,7 @@ app.use((err, req, res, next) => {
 });
 
 // set our port
-app.set('port', process.env.PORT || 3000);
+app.set('port', process.env.PORT || 5000);
 
 // start listening on our port
 const server = app.listen(app.get('port'), () => {
