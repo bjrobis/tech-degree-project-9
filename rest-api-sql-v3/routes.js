@@ -49,7 +49,7 @@ router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
     if (req.body.title && req.body.description) {
         const newCourse = await Course.findOne({where: {title: req.body.title}});
         const id = newCourse.id;
-        res.status(201).location(`/courses/${id}`);
+        res.status(201).setHeader("location", `/courses/${id}`);
     } else {
         res.status(400).json({message: error.message});
     }
